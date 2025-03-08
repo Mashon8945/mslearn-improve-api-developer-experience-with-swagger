@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace PrintFramerAPI.Controllers
 {
@@ -16,13 +17,31 @@ namespace PrintFramerAPI.Controllers
         /// <param name="Height">The height of the frame.</param>
         /// <param name="Width">The width of the frame.</param>
         /// <returns>The price, in dollars, of the picture frame.</returns> 
-        /// <remarks>The API returns 'not valid' if the total length of frame material needed (the perimeter of the frame) is less than 20 inchs and greater than 1000 inches.</remarks>
-        [HttpGet("{Height}/{Width}")]
-        public string GetPrice(string Height, string Width)
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     Get /api/priceframe/5/10
+        ///
+        /// </remarks>
+        /// <response>Returns the cost of the frame in dollars.</response>
+        /// <response>If the amount of frame material needed is less than 20 inches or greater than 1000 inches.</response>
+        [HttpGet("{Height}/{Width}", Name=nameof(GetPrice))]
+        [Produces("text/plain")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public ActionResult<string> GetPrice(string Height, string Width)
         {
             string result;
             result = CalculatePrice(Double.Parse(Height), Double.Parse(Width));
-            return $"The cost of a {Height}x{Width} frame is ${result}";
+
+            if (result == "not valid")
+            {
+                return BadRequest(result);
+            }
+            else 
+            {
+                return Ok($"The cost of a {Height}x{Width} frame is ${result}");
+            }
         }
 
         private string CalculatePrice(double height,double width)
